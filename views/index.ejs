@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>
+    <%= title %>
+  </title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
+</head>
+
+<body>
+  <%- include('components/navbar') %>
+
+    <div class="container">
+      <!-- Search input -->
+      <form action="/" method="GET" class="field has-addons" style="margin-bottom: 1rem;">
+        <div class="control is-expanded">
+          <input class="input" type="text" name="search" placeholder="Search by name..." value="<%= searchQuery %>">
+        </div>
+        <div class="control">
+          <button class="button is-primary" type="submit">Search</button>
+        </div>
+      </form>
+
+      <!-- Filter by brand -->
+      <div class="columns">
+        <div class="column is-one-quarter" style="border-right: 1px solid #D0D3D9">
+          <aside class="menu">
+            <p class="menu-label">Brands</p>
+            <ul class="menu-list">
+              <li><a href="/" class="<%= !selectedBrand ? 'is-active' : '' %>">All brands</a></li>
+              <% brands.forEach(brand=> { %>
+                <li>
+                  <a href="/?brand=<%= brand._id %>"
+                    class="<%= selectedBrand === brand._id.toString() ? 'is-active' : '' %>">
+                    <%= brand.brandName %>
+                  </a>
+                </li>
+                <% }) %>
+            </ul>
+          </aside>
+        </div>
+
+        <!-- Watch List -->
+        <div class="column">
+          <div class="columns is-multiline">
+            <% watchData.forEach(watch=> { %>
+              <div class="column is-one-third">
+                <div class="card">
+                  <div class="card-image">
+                    <figure class="image is-4by3" style="border-bottom: 1px solid #D0D3D9">
+                      <img src="<%= watch.image %>" alt="<%= watch.watchname %>">
+                    </figure>
+                  </div>
+                  <div class="card-content">
+                    <div class="media">
+                      <div class="media-content">
+                        <div class="content">
+                          <p class="title is-4" style="height: 75px;">
+                            <%= watch.watchName %>
+                          </p>
+                          <p class="subtitle is-6" style="margin-top: 1rem;">
+                            <%= watch.brand.brandName %>
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="price tag">
+                      Giá: <%= watch.price %>$
+                    </div>
+                    <a style="margin-left: 60%;" href="/watch/<%= watch._id %>" class="button is-primary">
+                      Xem chi tiết
+                    </a>
+                  </div>
+                </div>
+              </div>
+              <% }) %>
+          </div>
+
+          <!-- Pagination -->
+          <nav class="pagination is-centered is-rounded" role="navigation" aria-label="pagination">
+            <ul class="pagination-list">
+              <% for (let i=1; i <=pages; i++) { %>
+                <li>
+                  <a class="pagination-link <%= current === i ? 'is-current' : '' %>"
+                    href="?page=<%= i %><%= selectedBrand ? '&brand=' + selectedBrand : '' %>">
+                    <%= i %>
+                  </a>
+                </li>
+                <% } %>
+            </ul>
+          </nav>
+        </div>
+      </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= title %>
+    </title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
+    <style>
+        .image-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .image-container figure {
+            width: 128px;
+            height: 128px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .image-container img {
+            border-radius: 50%;
+            border: 0.5px solid black;
+            object-fit: cover;
+            width: 100%;
+            height: 100%
+        }
+
+        .action {
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+
+<body>
+    <%- include('../components/navbar') %>
+
+        <div class="container">
+            <h1 class="title">My profile</h1>
+            <p class="subtitle">Manage profile information for account security</p>
+
+            <div class="columns">
+                <div class="column is-two-thirds">
+                    <form action="/auth/profile" method="POST">
+                        <div class="field">
+                            <label class="label">User name</label>
+                            <div class="control">
+                                <input class="input" type="text" value="<%= user.membername %>" disabled>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label class="label">Name</label>
+                            <div class="control">
+                                <input class="input" type="text" name="name" value="<%= user.name %>">
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label class="label">Email</label>
+                            <div class="control">
+                                <input class="input" type="email" name="email" value="user@example.com">
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label class="label">Phone number</label>
+                            <div class="control">
+                                <input class="input" type="tel" name="phone" value="0327953466">
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label class="label">Gender</label>
+                            <div class="control">
+                                <label class="radio">
+                                    <input type="radio" name="gender" value="Nam">Nam
+                                </label>
+                                <label class="radio">
+                                    <input type="radio" name="gender" value="Nữ">Nữ
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label class="label">Year of birth</label>
+                            <div class="control">
+                                <input class="input" type="number" name="YOB" value="<%= user.YOB %>">
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <div class="control action">
+                                <button class="button is-primary" type="submit">Save update</button>
+                                <a href="/auth/change-password" class="button is-primary">Change password</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="column is-one-third">
+                    <div class="field image-container">
+                        <figure>
+                            <img src="https://th.bing.com/th/id/OIP.jKHBRVWDytTl9XLqRRQ7kAHaJ4?rs=1&pid=ImgDetMain"
+                                alt="User Avatar">
+                        </figure>
+                        <div class="control">
+                            <input style="z-index: 99;cursor: pointer" class="file-input" type="file" name="avatar">
+                            <button class="button is-primary is-fullwidth">Chọn Ảnh</button>
+                            <p class="help">Maximum file size 1 MB</p>
+                            <p class="help">Format: .JPEG, .PNG</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+</body>
+
+</html>

@@ -1,0 +1,55 @@
+<!-- views/login.ejs -->
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
+    <style>
+        .control {
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+
+<body>
+    <section class="section">
+        <div class="container">
+            <h1 class="title" style="text-align: center">Login</h1>
+            <div class="columns is-centered">
+                <div class="column is-half">
+                    <form action="/auth/login" method="POST">
+                        <div class="field">
+                            <label class="label">Username</label>
+                            <div class="control">
+                                <input class="input" type="text" name="membername" placeholder="Enter your username"
+                                    required>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label class="label">Password</label>
+                            <div class="control">
+                                <input class="input" type="password" name="password" placeholder="Enter your password"
+                                    required>
+                            </div>
+                        </div>
+
+                        <div class="control">
+                            <a class="button is-primary" href="/auth/register">Sign up</a>
+                            <p>
+                                <button class="button is-primary" type="submit">Sign in</button>
+                                <a class="button is-danger" href="/">Cancel</a>
+                            </p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+</body>
+
+</html>

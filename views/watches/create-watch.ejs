@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= title %>
+    </title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
+</head>
+
+<body>
+    <%- include('../components/navbar') %>
+
+        <div class="container">
+            <h1 class="title">Create a New Watch</h1>
+            <form action="/create-watch" method="POST">
+                <div class="field">
+                    <label class="label">Watch Name</label>
+                    <div class="control">
+                        <input class="input" type="text" name="watchName" required>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">Image URL</label>
+                    <div class="control">
+                        <input class="input" type="text" name="image" required>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">Price</label>
+                    <div class="control">
+                        <input class="input" type="number" name="price" required>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">Automatic</label>
+                    <div class="control">
+                        <label class="checkbox">
+                            <input type="checkbox" name="Automatic">
+                            Yes
+                        </label>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">Description</label>
+                    <div class="control">
+                        <textarea class="textarea" name="watchDescription" required></textarea>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">Brand</label>
+                    <div class="control">
+                        <div class="select">
+                            <select name="brand" required>
+                                <% brandData.forEach(brand=> { %>
+                                    <option value="<%= brand._id %>">
+                                        <%= brand.brandName %>
+                                    </option>
+                                    <% }) %>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control">
+                    <button class="button is-primary" type="submit">Create Watch</button>
+                </div>
+            </form>
+        </div>
+</body>
+
+</html>

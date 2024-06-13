@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= title %>
+    </title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" />
+    <style>
+        .header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        header a {
+            height: 2rem;
+        }
+
+        .img-container {
+            width: 128px;
+            height: 128px;
+            overflow: hidden;
+        }
+
+        .img-container img {
+            border-radius: 50%;
+            border: 0.5px solid black;
+            object-fit: cover;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <%- include('../components/navbar') %>
+
+        <div class="container">
+            <div class="header">
+                <h1 class="title">Watch List</h1>
+                <a style="height: 3rem;" href="/create-watch" class="button is-primary">Add New Watch</a>
+            </div>
+            <div class="table-container">
+                <table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth">
+                    <thead>
+                        <tr>
+                            <th>Image</th>
+                            <th>Watch Name</th>
+                            <th>Description</th>
+                            <th>Brand</th>
+                            <th>Price</th>
+                            <th>Automatic</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% watchData.forEach(watch=> { %>
+                            <tr>
+                                <td>
+                                    <figure class="img-container">
+                                        <img src="<%= watch.image %>" />
+                                    </figure>
+                                </td>
+                                <td>
+                                    <a href="/watch/<%= watch._id %>">
+                                        <%= watch.watchName %>
+                                    </a>
+                                </td>
+                                <td>
+                                    <%= watch.watchDescription %>
+                                </td>
+                                <td>
+                                    <%= watch.brand.brandName %>
+                                </td>
+                                <td style="text-align: center;">
+                                    <%= watch.price %>$
+                                </td>
+                                <td style="text-align: center;">
+                                    <%= watch.Automatic ? 'Yes' : 'No' %>
+                                </td>
+                                <td>
+                                    <a href="/watch/<%= watch._id %>/edit" style="color: green;"><i
+                                            class="fas fa-edit"></i></a>
+                                            
+                                    <form action="/watch/<%= watch._id %>?_method=DELETE" method="POST"
+                                        onsubmit="return confirm('Are you sure you want to delete this watch?');">
+                                        <button style="color: red;"><i class="fas fa-trash"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                            <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+</body>
+
+</html>

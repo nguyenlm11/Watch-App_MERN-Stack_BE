@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= title %>
+    </title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
+</head>
+
+<body>
+    <%- include('../components/navbar') %>
+
+        <div class="container">
+            <h1 class="title">User List</h1>
+            <div class="table-container">
+                <table class="table is-fullwidth is-bordered">
+                    <thead>
+                        <tr>
+                            <th style="text-align: center;">User Name</th>
+                            <th style="text-align: center;">Name</th>
+                            <th style="text-align: center;">Year of Birth</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% userData.forEach(user=> { %>
+                            <tr style="text-align: center;">
+                                <td>
+                                    <%= user.membername %>
+                                </td>
+                                <td>
+                                    <%= user.name %>
+                                </td>
+                                <td>
+                                    <%= user.YOB %>
+                                </td>
+                            </tr>
+                            <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+</body>
+
+</html>

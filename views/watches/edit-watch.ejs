@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Watch</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
+</head>
+
+<body>
+    <section class="section">
+        <div class="container">
+            <h1 class="title">Edit Watch</h1>
+            <form action="/watch/<%= watch._id %>/edit" method="POST">
+                <div class="field">
+                    <label for="watchName" class="label">Watch Name</label>
+                    <div class="control">
+                        <input type="text" id="watchName" name="watchName" class="input" value="<%= watch.watchName %>"
+                            required>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">Image URL</label>
+                    <div class="control">
+                        <input class="input" type="text" name="image" value="<%= watch.image %>" required>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">Price</label>
+                    <div class="control">
+                        <input class="input" type="number" name="price" value="<%= watch.price %>" required>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">Automatic</label>
+                    <div class="control">
+                        <label class="checkbox">
+                            <input type="checkbox" name="Automatic" <% if (watch.Automatic) { %> checked <% } %>>
+                                Yes
+                        </label>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">Description</label>
+                    <div class="control">
+                        <textarea class="textarea" name="watchDescription"
+                            required><%=watch.watchDescription%></textarea>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">Brand</label>
+                    <div class="control">
+                        <div class="select">
+                            <select name="brand" required>
+                                <% brandData.forEach(brand=> { %>
+                                    <option value="<%= brand._id %>" <% if
+                                        (brand._id.toString()===watch.brand._id.toString()) { %> selected <% } %>>
+                                            <%= brand.brandName %>
+                                    </option>
+                                    <% }) %>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="field is-grouped">
+                    <div class="control">
+                        <button type="submit" class="button is-primary">Save Changes</button>
+                    </div>
+                    <div class="control">
+                        <a href="/watch" class="button is-light">Cancel</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+</body>
+
+</html>

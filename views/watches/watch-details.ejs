@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= title %>
+    </title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
+</head>
+
+<script>
+    function goBack() {
+        window.history.back();
+    }
+</script>
+
+<body>
+    <%- include('../components/navbar') %>
+
+        <div class="container">
+            <div class="columns">
+                <div class="column is-two-thirds">
+                    <figure class="image is-4by3">
+                        <img src="<%= watch.image %>" alt="<%= watch.watchName %>">
+                    </figure>
+                </div>
+
+                <div class="column">
+                    <h1 class="title">
+                        <%= watch.watchName %>
+                    </h1>
+                    <div class="rating">
+                        <span class="icon"><i class="fas fa-star"></i></span>
+                        <span class="icon"><i class="fas fa-star"></i></span>
+                        <span class="icon"><i class="fas fa-star"></i></span>
+                        <span class="icon"><i class="fas fa-star"></i></span>
+                        <span class="icon"><i class="fas fa-star-half-alt"></i></span>
+                        <span>(đánh giá)</span>
+                    </div>
+                    <p class="price">Giá: <%= watch.price %>$</p>
+                    <p>Mô tả: <%= watch.watchDescription %>
+                    </p>
+
+                    <div class="buttons">
+                        <button class="button is-primary">Thêm vào giỏ hàng</button>
+                        <button class="button is-danger">Mua ngay</button>
+                    </div>
+                    <a onclick="goBack()" class="button is-link">Trở lại</a>
+                </div>
+            </div>
+        </div>
+</body>
+
+</html>
