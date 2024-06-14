@@ -1,8 +1,10 @@
 const Watch = require('../models/watch');
 const Brand = require('../models/brand');
+const Comment = require('../models/comment');
+const Member = require('../models/member');
 
 class WatchController {
-    //Get all Watches by admin
+    // Get all Watches for admin
     getAllWatchbyAdmin(req, res) {
         Watch.find({})
             .populate('brand')
@@ -18,7 +20,7 @@ class WatchController {
             .catch(err => res.status(500).send(err));
     }
 
-    // Get all Watches in Index
+    // Get all Watches at index.ejs
     getAllWatch(req, res) {
         const perPage = 6;
         const page = parseInt(req.query.page) || 1;
@@ -26,7 +28,6 @@ class WatchController {
         const brandFilter = req.query.brand || '';
 
         let query = {};
-
         if (searchQuery) {
             query.watchName = { $regex: searchQuery, $options: 'i' };
         }
@@ -81,20 +82,61 @@ class WatchController {
     getWatchDetails(req, res) {
         const watchId = req.params.id;
         Watch.findById(watchId)
-            .populate('brand')
+            .populate('brand comments')
+            .populate({
+                path: 'comments',
+                populate: { path: 'author', model: 'Member' }
+            })
             .then((watch) => {
                 if (!watch) {
                     return res.status(404).send('Watch not found');
                 }
+                const hasCommented = req.user ? watch.comments.some(comment => comment.author._id.equals(req.user._id)) : false;
                 res.render('watches/watch-details.ejs', {
                     title: 'Watch Details',
-                    watch: watch
+                    watch: watch,
+                    hasCommented: hasCommented
                 });
             })
             .catch(err => res.status(500).send(err));
     }
 
-    //Delete Watch
+    // Add comment to a watch
+    addComment(req, res) {
+        const watchId = req.params.id;
+        const { rating, content } = req.body;
+        const author = req.user._id;
+
+        Watch.findById(watchId)
+            .populate('comments')
+            .then((watch) => {
+                if (!watch) {
+                    return res.status(404).send('Watch not found');
+                }
+
+                const hasCommented = watch.comments.some(comment => comment.author.equals(author));
+                if (hasCommented) {
+                    return res.status(400).send('You have already commented on this watch');
+                }
+
+                const newComment = new Comment({
+                    rating,
+                    content,
+                    author
+                });
+
+                newComment.save()
+                    .then((savedComment) => {
+                        watch.comments.push(savedComment._id);
+                        return watch.save();
+                    })
+                    .then(() => res.redirect(`/watch/${watchId}`))
+                    .catch(err => res.status(500).send(err));
+            })
+            .catch(err => res.status(500).send(err));
+    }
+
+    // Delete Watch
     deleteWatch(req, res) {
         const watchId = req.params.id;
         Watch.findByIdAndDelete(watchId)
@@ -102,7 +144,7 @@ class WatchController {
             .catch(err => res.status(500).send(err));
     }
 
-    //Show form to edit watch
+    // Show form to edit watch
     showEditWatchForm(req, res) {
         const watchId = req.params.id;
         Watch.findById(watchId)
@@ -124,7 +166,7 @@ class WatchController {
             .catch(err => res.status(500).send(err));
     }
 
-    //Edit watch
+    // Edit watch
     editWatch(req, res) {
         const watchId = req.params.id;
         const updatedData = req.body;

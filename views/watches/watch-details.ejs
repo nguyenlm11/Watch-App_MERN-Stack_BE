@@ -21,36 +21,124 @@
 
         <div class="container">
             <div class="columns">
-                <div class="column is-two-thirds">
-                    <figure class="image is-4by3">
-                        <img src="<%= watch.image %>" alt="<%= watch.watchName %>">
-                    </figure>
+                <div class="column is-one-thirds">
+                    <div class="box">
+                        <figure class="image is-4by3">
+                            <img src="<%= watch.image %>" alt="<%= watch.watchName %>">
+                        </figure>
+                    </div>
                 </div>
 
                 <div class="column">
-                    <h1 class="title">
+                    <h1 class="title is-2">
                         <%= watch.watchName %>
                     </h1>
-                    <div class="rating">
-                        <span class="icon"><i class="fas fa-star"></i></span>
-                        <span class="icon"><i class="fas fa-star"></i></span>
-                        <span class="icon"><i class="fas fa-star"></i></span>
-                        <span class="icon"><i class="fas fa-star"></i></span>
-                        <span class="icon"><i class="fas fa-star-half-alt"></i></span>
-                        <span>(đánh giá)</span>
-                    </div>
-                    <p class="price">Giá: <%= watch.price %>$</p>
-                    <p>Mô tả: <%= watch.watchDescription %>
+
+                    <p>
+                        <span class="title is-5">Price:</span>
+                        <span class="title is-3 has-text-danger">$<%= watch.price %></span>
                     </p>
 
-                    <div class="buttons">
-                        <button class="button is-primary">Thêm vào giỏ hàng</button>
-                        <button class="button is-danger">Mua ngay</button>
+                    <div class="content">
+                        <textarea class="textarea" disabled><%=watch.watchDescription%></textarea>
                     </div>
-                    <a onclick="goBack()" class="button is-link">Trở lại</a>
+
+                    <div class="buttons">
+                        <% if (user && !user.isAdmin) { %>
+                            <button class="button">Add to shopping cart</button>
+                            <button class="button is-link">Buy now</button>
+                            <% } %>
+                                <a onclick="goBack()" style="position: absolute; right: 0;"
+                                    class="button is-danger">Back</a>
+                    </div>
+
+                    <!-- Comment Form -->
+                    <% if (user && !user.isAdmin) { %>
+                        <div class="container">
+                            <% if (!hasCommented) { %>
+                                <form action="/watch/<%= watch._id %>/comments" method="POST">
+                                    <div class="field">
+                                        <label class="label">Rate</label>
+                                        <div class="control">
+                                            <div id="star-rating">
+                                                <% for (let i=1; i <=5; i++) { %>
+                                                    <span class="star" data-value="<%= i %>">
+                                                        <i class="far fa-star"></i>
+                                                    </span>
+                                                    <% } %>
+                                            </div>
+                                            <input id="rating-input" class="input" type="hidden" name="rating" required>
+                                        </div>
+                                    </div>
+                                    <div class="field">
+                                        <label class="label">Content</label>
+                                        <div class="control">
+                                            <textarea class="textarea" name="content" required></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="control" style="display: flex; justify-content: flex-end">
+                                        <button class="button is-primary" type="submit">Send</button>
+                                    </div>
+                                </form>
+                                <% } else { %>
+                                    <p style="text-align: center; color: red">You have rated this product</p>
+                                    <% } %>
+                                        <% } %>
+                        </div>
                 </div>
             </div>
         </div>
+        <br>
+
+        <!-- Display Comments -->
+        <div class="container">
+            <div class="box">
+                <h2 class="title is-5">All comments</h2>
+                <% watch.comments.forEach(comment=> { %>
+                    <article class="media">
+                        <div class="media-content">
+                            <div class="content">
+                                <p>
+                                    <strong>
+                                        <%= comment.author.membername %>:
+                                    </strong>
+                                    <span>
+                                        <%= comment.content %>
+                                    </span>
+                                    <br>
+                                    <small>Rate: <%= comment.rating %> / 5</small>
+                                </p>
+                            </div>
+                        </div>
+                    </article>
+                    <% }); %>
+            </div>
+        </div>
 </body>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const stars = document.querySelectorAll('#star-rating .star');
+        const ratingInput = document.getElementById('rating-input');
+
+        stars.forEach(star => {
+            star.addEventListener('click', () => {
+                const rating = star.getAttribute('data-value');
+                ratingInput.value = rating;
+
+                // Cập nhật giao diện các sao
+                stars.forEach(s => {
+                    if (s.getAttribute('data-value') <= rating) {
+                        s.querySelector('i').classList.add('fas');
+                        s.querySelector('i').classList.remove('far');
+                    } else {
+                        s.querySelector('i').classList.add('far');
+                        s.querySelector('i').classList.remove('fas');
+                    }
+                });
+            });
+        });
+    });
+</script>
 
 </html>

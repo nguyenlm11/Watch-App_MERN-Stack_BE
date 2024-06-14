@@ -12,15 +12,4 @@ const memberSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-// memberSchema.pre('save', async function (next) {
-//     if (this.isModified('password') || this.isNew) {
-//         this.password = await bcrypt.hash(this.password, 10);
-//     }
-//     next();
-// });
-
-// memberSchema.methods.comparePassword = function (candidatePassword) {
-//     return bcrypt.compare(candidatePassword, this.password);
-// };
-
 module.exports = mongoose.model('Member', memberSchema);

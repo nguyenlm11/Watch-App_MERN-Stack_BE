@@ -21,17 +21,21 @@ class BrandController {
             .then(() => res.redirect('/brand'))
             .catch(err => res.status(500).send(err));
     }
+
     // Delete Brand
     deleteBrand(req, res) {
         const brandId = req.params.id;
         Brand.findByIdAndDelete(brandId)
-            .then(() => {
+            .then(deleteBrand => {
+                if (!deleteBrand) {
+                    return res.status(404).send('Brand not found');
+                }
                 return Watch.deleteMany({ brand: brandId });
             })
             .then(() => res.redirect('/brand'))
             .catch(err => res.status(500).send(err));
     }
-    
+
     // Edit Brand Form
     editBrandForm(req, res) {
         const brandId = req.params.id;
