@@ -20,14 +20,18 @@
                 <table class="table is-fullwidth is-bordered">
                     <thead>
                         <tr>
+                            <th style="text-align: center;">No</th>
                             <th style="text-align: center;">User Name</th>
                             <th style="text-align: center;">Name</th>
                             <th style="text-align: center;">Year of Birth</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <% userData.forEach(user=> { %>
+                        <% userData.forEach((user, index)=> { %>
                             <tr style="text-align: center;">
+                                <td>
+                                    <%= (perPage * currentPage) - perPage + index + 1 %>
+                                </td>
                                 <td>
                                     <%= user.membername %>
                                 </td>
@@ -42,6 +46,19 @@
                     </tbody>
                 </table>
             </div>
+
+            <nav class="pagination is-centered is-rounded" role="navigation" aria-label="pagination">
+                <ul class="pagination-list">
+                    <% for (let i=1; i <=totalPages; i++) { %>
+                        <li>
+                            <a class="pagination-link <%= i === currentPage ? 'is-current' : '' %>"
+                                href="?page=<%= i %>">
+                                <%= i %>
+                            </a>
+                        </li>
+                        <% } %>
+                </ul>
+            </nav>
         </div>
 </body>
 

@@ -6,24 +6,36 @@ const Member = require('../models/member');
 class WatchController {
     // Get all Watches for admin
     getAllWatchbyAdmin(req, res) {
+        const page = parseInt(req.query.page) || 1;
+        const perPage = 5;
+        const skip = (perPage * page) - perPage;
+
         Watch.find({})
             .populate('brand')
+            .skip(skip)
+            .limit(perPage)
             .then((watches) => {
-                Brand.find({}).then((brands) => {
-                    res.render('watches/watch-list.ejs', {
-                        title: 'Watch App - Watches',
-                        brands: brands,
-                        watchData: watches
+                Watch.countDocuments({}).then((totalWatches) => {
+                    Brand.find({}).then((brands) => {
+                        res.render('watches/watch-list.ejs', {
+                            title: 'Watch App - Watches',
+                            brands: brands,
+                            watchData: watches,
+                            totalPages: Math.ceil(totalWatches / perPage),
+                            currentPage: page
+                        });
                     });
                 });
             })
             .catch(err => res.status(500).send(err));
     }
 
+
     // Get all Watches at index.ejs
     getAllWatch(req, res) {
         const perPage = 6;
         const page = parseInt(req.query.page) || 1;
+        const skip = (perPage * page) - perPage;
         const searchQuery = req.query.search || '';
         const brandFilter = req.query.brand || '';
 
@@ -35,17 +47,17 @@ class WatchController {
             query.brand = brandFilter;
         }
         Watch.find(query)
-            .skip((perPage * page) - perPage)
+            .skip(skip)
             .limit(perPage)
             .populate('brand')
             .then((watches) => {
-                Watch.countDocuments(query).then((count) => {
+                Watch.countDocuments(query).then((totalWatches) => {
                     Brand.find({}).then((brands) => {
                         res.render('index', {
                             title: 'Watch App',
                             watchData: watches,
                             current: page,
-                            pages: Math.ceil(count / perPage),
+                            pages: Math.ceil(totalWatches / perPage),
                             searchQuery: searchQuery,
                             brands: brands,
                             selectedBrand: brandFilter
