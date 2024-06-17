@@ -1,20 +1,20 @@
 var express = require('express');
 var brandRouter = express.Router();
 const brandController = require('../controllers/brandController');
-const checkAdmin = require('../middleware/checkAdmin');
+const middlewareController = require('../middleware/middlewareController');
 
 brandRouter.route('/')
-    .get(checkAdmin, brandController.getAllBrand)
-    .post(checkAdmin, brandController.insertBrand)
+    .get(middlewareController.checkAdmin, brandController.getAllBrand)
+    .post(middlewareController.checkAdmin, brandController.insertBrand)
 
 brandRouter.route('/:id')
-    .put(checkAdmin, brandController.updateBrand)
-    .delete(checkAdmin, brandController.deleteBrand);
+    .put(middlewareController.checkAdmin, brandController.updateBrand)
+    .delete(middlewareController.checkAdmin, brandController.deleteBrand);
 
 brandRouter.route('/:id/edit')
-    .get(checkAdmin, brandController.editBrandForm);
+    .get(middlewareController.checkAdmin, brandController.editBrandForm);
 
-brandRouter.get('/new', checkAdmin, (req, res) => {
+brandRouter.get('/new', middlewareController.checkAdmin, (req, res) => {
     res.render('brands/create-brand.ejs', {
         title: 'Add New Brand'
     });

@@ -1,27 +1,26 @@
 var express = require('express');
 var authRouter = express.Router();
 const authController = require('../controllers/authController');
-const checkLogin = require('../middleware/checkLogin')
-const authenticate = require('../middleware/authenticate');
+const middlewareController = require('../middleware/middlewareController');
 
 authRouter.route('/register')
-    .get(checkLogin, authController.showRegisterForm)
-    .post(checkLogin, authController.register);
+    .get(middlewareController.checkLogin, authController.showRegisterForm)
+    .post(middlewareController.checkLogin, authController.register);
 
 authRouter.route('/login')
-    .get(checkLogin, authController.showLoginForm)
-    .post(checkLogin, authController.login);
+    .get(middlewareController.checkLogin, authController.showLoginForm)
+    .post(middlewareController.checkLogin, authController.login);
 
 authRouter.route('/logout')
     .get(authController.logout);
 
 authRouter.route('/profile')
-    .get(authenticate, authController.showProfile)
-    .post(authenticate, authController.updateProfile);
+    .get(middlewareController.authenticateJWT, authController.showProfile)
+    .post(middlewareController.authenticateJWT, authController.updateProfile);
 
 authRouter.route('/change-password')
-    .get(authenticate, authController.showChangePasswordForm)
-    .post(authenticate, authController.changePassword);
+    .get(middlewareController.authenticateJWT, authController.showChangePasswordForm)
+    .post(middlewareController.authenticateJWT, authController.changePassword);
 
 
 

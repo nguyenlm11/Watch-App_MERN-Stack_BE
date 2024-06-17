@@ -7,10 +7,8 @@ const mongoose = require('mongoose');
 const session = require('express-session');
 const bodyParser = require('body-parser');
 const methodOverride = require('method-override');
-const authenticateJWT = require('./middleware/authenticate');
-const setUser = require('./middleware/setUser');
+const middlewareController = require('./middleware/middlewareController');
 
-var indexRouter = require('./routes/index');
 var userRouter = require('./routes/userRouter');
 const brandRouter = require('./routes/brandRouter');
 const watchRouter = require('./routes/watchRouter');
@@ -37,8 +35,8 @@ app.use(session({
   cookie: { secure: false }
 }));
 
-app.use(authenticateJWT);
-app.use(setUser);
+app.use(middlewareController.authenticateJWT);
+app.use(middlewareController.setUser);
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
