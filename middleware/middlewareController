@@ -9,6 +9,7 @@ function authenticateJWT(req, res, next) {
     if (token) {
         jwt.verify(token, SECRET_KEY, (err, decoded) => {
             if (err) {
+                req.session.destroy();
                 return res.redirect('/auth/login');
             }
 
@@ -47,7 +48,7 @@ function checkLogin(req, res, next) {
     }
 }
 
-// Middleware to check if user is authenticated (not admin)
+// Middleware to check if user is not admin
 function isAuthenticated(req, res, next) {
     if (req.user && !req.user.isAdmin) {
         return next();
@@ -62,7 +63,6 @@ function setUser(req, res, next) {
     next();
 }
 
-// Exporting all middleware functions
 module.exports = {
     authenticateJWT,
     checkAdmin,

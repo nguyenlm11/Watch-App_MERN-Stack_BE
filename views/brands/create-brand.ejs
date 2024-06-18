@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
@@ -35,6 +35,11 @@
                     <a href="/brand" class="button is-danger">Cancel</a>
                 </div>
             </form>
+            <% if (typeof error !=='undefined' ) { %>
+                <div class="notification is-danger" style="margin-top: 1rem;">
+                    <%= error %>
+                </div>
+                <% } %>
         </div>
 </body>
 

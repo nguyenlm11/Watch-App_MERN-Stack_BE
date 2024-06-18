@@ -18,28 +18,36 @@ class AuthController {
     //Register user
     register(req, res) {
         const { membername, password, name, YOB } = req.body;
+
         Member.findOne({ membername })
             .then(member => {
                 if (member) {
-                    return res.status(400).send('User already exists');
+                    res.render('register', {
+                        title: 'Register',
+                        error: 'User already exists. Please choose a different username.'
+                    });
+                    return null;
                 }
-
                 return bcrypt.hash(password, 10);
             })
             .then(hashedPassword => {
-                const newMember = new Member({
-                    membername,
-                    password: hashedPassword,
-                    name,
-                    YOB
-                });
-                return newMember.save();
+                if (hashedPassword) {
+                    const newMember = new Member({
+                        membername,
+                        password: hashedPassword,
+                        name,
+                        YOB
+                    });
+                    return newMember.save();
+                }
             })
             .then(() => {
                 res.redirect('/auth/login');
             })
             .catch(err => {
-                res.status(500).send('Server error');
+                if (!res.headersSent) {
+                    res.status(500).send('Server error');
+                }
             });
     }
 
@@ -49,13 +57,19 @@ class AuthController {
         Member.findOne({ membername })
             .then(member => {
                 if (!member) {
-                    return res.status(400).send('Incorrect username or password');
+                    return res.render('login', {
+                        title: 'Login',
+                        error: 'Incorrect username or password'
+                    });
                 }
 
                 return bcrypt.compare(password, member.password)
                     .then(isMatch => {
                         if (!isMatch) {
-                            return res.status(400).send('Incorrect username or password');
+                            return res.render('login', {
+                                title: 'Login',
+                                error: 'Incorrect username or password'
+                            });
                         }
                         // Tạo JWT
                         const token = jwt.sign({
@@ -65,9 +79,8 @@ class AuthController {
                             YOB: member.YOB,
                             isAdmin: member.isAdmin
                         }, SECRET_KEY, { expiresIn: '1h' });
-                        
+
                         req.session.token = token;
-                        // res.send(`Token: ${token}`);
                         res.redirect('/');
                     });
             })
@@ -130,8 +143,13 @@ class AuthController {
     //Change password 
     changePassword(req, res) {
         const { currentPassword, newPassword, confirmNewPassword } = req.body;
+
+        // Check if the new password and confirmation match
         if (newPassword !== confirmNewPassword) {
-            return res.status(400).send('New password does not match');
+            return res.render('users/change-password', {
+                title: 'Change Password',
+                error: 'New password and confirmation do not match'
+            });
         }
 
         Member.findById(req.user.id)
@@ -140,19 +158,33 @@ class AuthController {
                     return res.status(404).send('User not found');
                 }
 
+                // Check if the current password is correct
                 return bcrypt.compare(currentPassword, member.password)
                     .then(isMatch => {
                         if (!isMatch) {
-                            return res.status(400).send('Current password is incorrect');
+                            return res.render('users/change-password', {
+                                title: 'Change Password',
+                                error: 'Current password is incorrect'
+                            });
                         }
-                        return bcrypt.hash(newPassword, 10);
-                    })
-                    .then(hashedNewPassword => {
-                        member.password = hashedNewPassword;
-                        return member.save();
-                    })
-                    .then(() => {
-                        res.redirect('/auth/profile');
+
+                        // Check if the new password is different from the current password
+                        if (currentPassword === newPassword) {
+                            return res.render('users/change-password', {
+                                title: 'Change Password',
+                                error: 'New password must be different from the current password'
+                            });
+                        }
+
+                        // Hash the new password
+                        return bcrypt.hash(newPassword, 10)
+                            .then(hashedNewPassword => {
+                                member.password = hashedNewPassword;
+                                return member.save();
+                            })
+                            .then(() => {
+                                res.redirect('/auth/logout');
+                            });
                     });
             })
             .catch(err => {
@@ -161,6 +193,5 @@ class AuthController {
             });
     }
 }
-
 
 module.exports = new AuthController();

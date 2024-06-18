@@ -1,6 +1,5 @@
-<!-- views/login.ejs -->
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
@@ -40,6 +39,11 @@
                             </p>
                         </div>
                     </form>
+                    <% if (typeof error !=='undefined' ) { %>
+                        <div class="notification is-danger" style="margin-top: 1rem;">
+                            <%= error %>
+                        </div>
+                        <% } %>
                 </div>
             </div>
         </div>

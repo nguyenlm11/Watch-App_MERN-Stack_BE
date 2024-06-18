@@ -31,12 +31,13 @@ connect.then((db) => {
 app.use(session({
   secret: SECRET_KEY,
   resave: false,
-  saveUninitialized: true,
+  saveUninitialized: false,
   cookie: { secure: false }
 }));
 
 app.use(middlewareController.authenticateJWT);
 app.use(middlewareController.setUser);
+
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

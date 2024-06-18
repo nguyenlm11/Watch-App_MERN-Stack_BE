@@ -3,7 +3,7 @@ const Watch = require('../models/watch');
 
 class BrandController {
     // Get all Brands
-    getAllBrand(req, res) {
+    async getAllBrand(req, res) {
         Brand.find({})
             .then((brands) => {
                 res.render('brands/brand-list.ejs', {
@@ -16,9 +16,22 @@ class BrandController {
 
     // Add new Brand
     insertBrand(req, res) {
-        const br = new Brand(req.body);
-        br.save()
-            .then(() => res.redirect('/brand'))
+        const brandName = req.body.brandName;
+
+        Brand.findOne({ brandName: brandName })
+            .then(existingBrand => {
+                if (existingBrand) {
+                    res.render('brands/create-brand.ejs', {
+                        title: 'Add New Brand',
+                        error: 'Brand already exists'
+                    });
+                } else {
+                    const br = new Brand({ brandName: brandName });
+                    br.save()
+                        .then(() => res.redirect('/brand'))
+                        .catch(err => res.status(500).send(err));
+                }
+            })
             .catch(err => res.status(500).send(err));
     }
 
@@ -52,9 +65,30 @@ class BrandController {
     // Update Brand
     updateBrand(req, res) {
         const brandId = req.params.id;
-        Brand.findByIdAndUpdate(brandId, req.body, { new: true })
-            .then(() => res.redirect('/brand'))
-            .catch(err => res.status(500).send(err));
+        const BrandName = req.body.brandName;
+
+        Brand.findById(brandId)
+            .then((brand) => {
+                if (!brand) {
+                    return res.status(404).send('Brand not found');
+                }
+
+                Brand.findOne({ brandName: BrandName, _id: { $ne: brandId } })
+                    .then((existingBrand) => {
+                        if (existingBrand) {
+                            return res.render('brands/edit-brand.ejs', {
+                                title: 'Edit Brand',
+                                brand: brand,
+                                error: 'Brand already exists'
+                            });
+                        }
+                        Brand.findByIdAndUpdate(brandId, req.body, { new: true })
+                            .then(() => res.redirect('/brand'))
+                            .catch((err) => res.status(500).send(err));
+                    })
+                    .catch((err) => res.status(500).send(err));
+            })
+            .catch((err) => res.status(500).send(err));
     }
 }
 

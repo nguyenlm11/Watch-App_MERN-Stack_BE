@@ -3,7 +3,7 @@
 
 <head>
     <title>Register</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
 </head>
 
 <body>
@@ -75,6 +75,11 @@
                     </div>
                 </div>
             </form>
+            <% if (typeof error !=='undefined' ) { %>
+                <div class="notification is-danger" style="margin-top: 1rem;">
+                    <%= error %>
+                </div>
+                <% } %>
         </div>
     </section>
 </body>
