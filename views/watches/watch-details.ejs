@@ -9,12 +9,11 @@
     </title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
 </head>
-
-<script>
-    function goBack() {
-        window.history.back();
+<style>
+    #star-rating .fa-star.fas {
+        color: #FDDE55;
     }
-</script>
+</style>
 
 <body>
     <%- include('../components/navbar') %>
@@ -48,8 +47,11 @@
                             <button class="button">Add to shopping cart</button>
                             <button class="button is-link">Buy now</button>
                             <% } %>
-                                <a onclick="goBack()" style="position: absolute; right: 0;"
-                                    class="button is-danger">Back</a>
+                                <% if (user && user.isAdmin) { %>
+                                    <a onclick="goBack()" style="position: absolute; right: 0;"
+                                        class="button is-danger">Back</a>
+                                    <% } %>
+
                     </div>
 
                     <!-- Comment Form -->
@@ -94,10 +96,19 @@
         <div class="container">
             <div class="box">
                 <h2 class="title is-5">All comments</h2>
-                <% watch.comments.forEach(comment=> { %>
+                <% watch.comments.sort((a, b)=> new Date(b.createdAt) - new Date(a.createdAt)).forEach(comment => { %>
                     <article class="media">
                         <div class="media-content">
                             <div class="content">
+                                <p>
+                                    <% const createdAt=new Date(comment.createdAt); const months=["January", "February"
+                                        , "March" , "April" , "May" , "June" , "July" , "August" , "September"
+                                        , "October" , "November" , "December" ]; const
+                                        formattedTime=`${months[createdAt.getMonth()]} ${createdAt.getDate()},
+                                        ${createdAt.getFullYear()} AT
+                                        ${createdAt.getHours()}:${String(createdAt.getMinutes()).padStart(2, '0' )}`; %>
+                                        <%= formattedTime %>
+                                </p>
                                 <p>
                                     <strong>
                                         <%= comment.author.membername %>:
@@ -106,7 +117,9 @@
                                         <%= comment.content %>
                                     </span>
                                     <br>
-                                    <small>Rate: <%= comment.rating %> / 5</small>
+                                    <small>Rate: <%= comment.rating %>/5
+                                            <i class="fas fa-star" style="color: #FDDE55;"></i>
+                                    </small>
                                 </p>
                             </div>
                         </div>
@@ -126,7 +139,6 @@
                 const rating = star.getAttribute('data-value');
                 ratingInput.value = rating;
 
-                // Cập nhật giao diện các sao
                 stars.forEach(s => {
                     if (s.getAttribute('data-value') <= rating) {
                         s.querySelector('i').classList.add('fas');
@@ -139,6 +151,12 @@
             });
         });
     });
+</script>
+
+<script>
+    function goBack() {
+        window.history.back();
+    }
 </script>
 
 </html>

@@ -1,197 +1,146 @@
 const Watch = require('../models/watch');
 const Brand = require('../models/brand');
-const Comment = require('../models/comment');
-const Member = require('../models/member');
 
 class WatchController {
-    // Get all Watches for admin
-    getAllWatchbyAdmin(req, res) {
-        const page = parseInt(req.query.page) || 1;
-        const perPage = 5;
-        const skip = (perPage * page) - perPage;
-
-        Watch.find({})
-            .populate('brand')
-            .skip(skip)
-            .limit(perPage)
-            .then((watches) => {
-                Watch.countDocuments({}).then((totalWatches) => {
-                    Brand.find({}).then((brands) => {
-                        res.render('watches/watch-list.ejs', {
-                            title: 'Watch App - Watches',
-                            brands: brands,
-                            watchData: watches,
-                            totalPages: Math.ceil(totalWatches / perPage),
-                            currentPage: page
-                        });
-                    });
-                });
-            })
-            .catch(err => res.status(500).send(err));
-    }
-
-
-    // Get all Watches at index.ejs
-    getAllWatch(req, res) {
-        const perPage = 6;
-        const page = parseInt(req.query.page) || 1;
-        const skip = (perPage * page) - perPage;
-        const searchQuery = req.query.search || '';
-        const brandFilter = req.query.brand || '';
-
-        let query = {};
-        if (searchQuery) {
-            query.watchName = { $regex: searchQuery, $options: 'i' };
+    // Get all watch for Admin
+    async getAllWatchbyAdmin(req, res) {
+        try {
+            const watches = await Watch.find({})
+                .populate('brand');
+            const brands = await Brand.find({});
+            res.json({
+                watches: watches,
+                brands: brands
+            });
+        } catch (err) {
+            res.status(500).json({ error: err.message });
         }
-        if (brandFilter) {
-            query.brand = brandFilter;
+    }
+
+    // Get all watch at Home
+    async getAllWatch(req, res) {
+        try {
+            const perPage = 9;
+            const page = parseInt(req.query.page) || 1;
+            const skip = (perPage * page) - perPage;
+            const searchQuery = req.query.search || '';
+            const brandFilter = req.query.brand || '';
+
+            let query = {};
+            if (searchQuery) {
+                query.watchName = { $regex: searchQuery, $options: 'i' };
+            }
+            if (brandFilter) {
+                query.brand = brandFilter;
+            }
+
+            const watches = await Watch.find(query)
+                .skip(skip)
+                .limit(perPage)
+                .populate('brand');
+
+            const totalWatches = await Watch.countDocuments(query);
+            const brands = await Brand.find({});
+
+            res.json({
+                watches: watches,
+                brands: brands,
+                totalPages: Math.ceil(totalWatches / perPage),
+                currentPage: page,
+                searchQuery: searchQuery,
+                selectedBrand: brandFilter
+            });
+        } catch (err) {
+            res.status(500).json({ error: err.message });
         }
-        Watch.find(query)
-            .skip(skip)
-            .limit(perPage)
-            .populate('brand')
-            .then((watches) => {
-                Watch.countDocuments(query).then((totalWatches) => {
-                    Brand.find({}).then((brands) => {
-                        res.render('index', {
-                            title: 'Watch App',
-                            watchData: watches,
-                            current: page,
-                            pages: Math.ceil(totalWatches / perPage),
-                            searchQuery: searchQuery,
-                            brands: brands,
-                            selectedBrand: brandFilter
-                        });
-                    });
-                });
-            })
-            .catch(err => res.status(500).send(err));
     }
 
-    // Show form to create a new watch
-    showCreateWatchForm(req, res) {
-        Brand.find({})
-            .then((brands) => {
-                res.render('watches/create-watch.ejs', {
-                    title: 'Create New Watch',
-                    brandData: brands
-                });
-            })
-            .catch(err => res.status(500).send(err));
+    // Add new watch
+    async insertWatch(req, res) {
+        try {
+            const watchData = req.body;
+            const watch = new Watch(watchData);
+            await watch.save();
+            res.json({ message: 'Watch added successfully' });
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
     }
 
-    // Add new Watch
-    insertWatch(req, res) {
-        const watchData = req.body;
-        watchData.Automatic = watchData.Automatic === "on";
-        const watch = new Watch(watchData);
-        watch.save()
-            .then(() => res.redirect('/watch'))
-            .catch(err => res.status(500).send(err));
+    // Watch detail
+    async getWatchDetails(req, res) {
+        try {
+            const watch = await Watch.findById(req.params.id)
+                .populate('brand', 'brandName')
+                .populate('comments.author', 'membername');
+            if (!watch) return res.status(404).json({ error: 'Watch not found' });
+            res.json(watch);
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
     }
 
-    // Get watch details
-    getWatchDetails(req, res) {
-        const watchId = req.params.id;
-        Watch.findById(watchId)
-            .populate('brand comments')
-            .populate({
-                path: 'comments',
-                populate: { path: 'author', model: 'Member' }
-            })
-            .then((watch) => {
-                if (!watch) {
-                    return res.status(404).send('Watch not found');
-                }
-                const hasCommented = req.user ? watch.comments.some(comment => comment.author._id.equals(req.user._id)) : false;
-                res.render('watches/watch-details.ejs', {
-                    title: 'Watch Details',
-                    watch: watch,
-                    hasCommented: hasCommented
-                });
-            })
-            .catch(err => res.status(500).send(err));
-    }
-
-    // Add comment to a watch
-    addComment(req, res) {
-        const watchId = req.params.id;
+    // Add comment to watch
+    addCommentToWatch = async (req, res) => {
         const { rating, content } = req.body;
-        const author = req.user._id;
+        try {
+            const watch = await Watch.findById(req.params.id);
+            if (!watch) {
+                return res.status(404).json({ error: 'Watch not found' });
+            }
+            if (req.member.isAdmin) {
+                return res.status(400).json({ error: 'Admin cannot comment' });
+            }
+            const existingComment = watch.comments.find(comment => comment.author.toString() === req.member._id.toString());
+            if (existingComment) {
+                return res.status(400).json({ error: 'You have already commented' });
+            }
+            const newComment = {
+                rating,
+                content,
+                author: req.member._id,
 
-        Watch.findById(watchId)
-            .populate('comments')
-            .then((watch) => {
-                if (!watch) {
-                    return res.status(404).send('Watch not found');
-                }
+            };
+            watch.comments.push(newComment);
+            await watch.save();
+            await watch.populate('comments.author', 'membername');
+            res.status(201).json(watch);
+        } catch (err) {
+            console.error('Error adding comment:', err);
+            res.status(500).json({ error: err.message });
+        }
+    };
 
-                const hasCommented = watch.comments.some(comment => comment.author.equals(author));
-                if (hasCommented) {
-                    return res.status(400).send('You have already commented on this watch');
-                }
-
-                const newComment = new Comment({
-                    rating,
-                    content,
-                    author
-                });
-
-                newComment.save()
-                    .then((savedComment) => {
-                        watch.comments.push(savedComment._id);
-                        return watch.save();
-                    })
-                    .then(() => res.redirect(`/watch/${watchId}`))
-                    .catch(err => res.status(500).send(err));
-            })
-            .catch(err => res.status(500).send(err));
-    }
-
-    // Delete Watch
-    deleteWatch(req, res) {
-        const watchId = req.params.id;
-        Watch.findByIdAndDelete(watchId)
-            .then(() => res.redirect('/watch'))
-            .catch(err => res.status(500).send(err));
-    }
-
-    // Show form to edit watch
-    showEditWatchForm(req, res) {
-        const watchId = req.params.id;
-        Watch.findById(watchId)
-            .populate('brand')
-            .then((watch) => {
-                if (!watch) {
-                    return res.status(404).send('Watch not found');
-                }
-                Brand.find({})
-                    .then((brands) => {
-                        res.render('watches/edit-watch.ejs', {
-                            title: 'Edit Watch',
-                            watch: watch,
-                            brandData: brands
-                        });
-                    })
-                    .catch(err => res.status(500).send(err));
-            })
-            .catch(err => res.status(500).send(err));
+    // Delete watch
+    async deleteWatch(req, res) {
+        try {
+            const watchId = req.params.id;
+            await Watch.findByIdAndDelete(watchId);
+            res.json({ message: 'Watch deleted successfully' });
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
     }
 
     // Edit watch
-    editWatch(req, res) {
-        const watchId = req.params.id;
-        const updatedData = req.body;
-        updatedData.Automatic = updatedData.Automatic === "on";
+    async editWatch(req, res) {
+        try {
+            const watchId = req.params.id;
+            const updatedData = req.body;
 
-        Watch.findByIdAndUpdate(watchId, updatedData, { new: true })
-            .then((updatedWatch) => {
-                if (!updatedWatch) {
-                    return res.status(404).send('Watch not found');
-                }
-                res.redirect('/watch');
-            })
-            .catch(err => res.status(500).send(err));
+            const updatedWatch = await Watch.findByIdAndUpdate(
+                watchId,
+                updatedData,
+                { new: true }
+            ).populate('brand');
+
+            if (!updatedWatch) {
+                return res.status(404).json({ message: 'Watch not found' });
+            }
+            res.json({ watch: updatedWatch });
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
     }
 }
 

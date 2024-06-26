@@ -5,193 +5,164 @@ const jwt = require('jsonwebtoken');
 const SECRET_KEY = '12345-67890-09876-54321';
 
 class AuthController {
-    //Show login form
-    showLoginForm(req, res) {
-        res.render('login', { title: 'Login' });
-    };
 
-    //Show register form
-    showRegisterForm(req, res) {
-        res.render('register', { title: 'Register' });
-    };
-
-    //Register user
-    register(req, res) {
+    register = async (req, res) => {
         const { membername, password, name, YOB } = req.body;
-
-        Member.findOne({ membername })
-            .then(member => {
-                if (member) {
-                    res.render('register', {
-                        title: 'Register',
-                        error: 'User already exists. Please choose a different username.'
-                    });
-                    return null;
-                }
-                return bcrypt.hash(password, 10);
-            })
-            .then(hashedPassword => {
-                if (hashedPassword) {
-                    const newMember = new Member({
-                        membername,
-                        password: hashedPassword,
-                        name,
-                        YOB
-                    });
-                    return newMember.save();
-                }
-            })
-            .then(() => {
-                res.redirect('/auth/login');
-            })
-            .catch(err => {
-                if (!res.headersSent) {
-                    res.status(500).send('Server error');
-                }
-            });
-    }
-
-    //Login 
-    login(req, res) {
-        const { membername, password } = req.body;
-        Member.findOne({ membername })
-            .then(member => {
-                if (!member) {
-                    return res.render('login', {
-                        title: 'Login',
-                        error: 'Incorrect username or password'
-                    });
-                }
-
-                return bcrypt.compare(password, member.password)
-                    .then(isMatch => {
-                        if (!isMatch) {
-                            return res.render('login', {
-                                title: 'Login',
-                                error: 'Incorrect username or password'
-                            });
-                        }
-                        // Tạo JWT
-                        const token = jwt.sign({
-                            id: member._id,
-                            membername: member.membername,
-                            name: member.name,
-                            YOB: member.YOB,
-                            isAdmin: member.isAdmin
-                        }, SECRET_KEY, { expiresIn: '1h' });
-
-                        req.session.token = token;
-                        res.redirect('/');
-                    });
-            })
-            .catch(err => {
-                console.error(err);
-                res.status(500).send('Server error');
-            });
-    }
-
-    //Logout
-    logout(req, res) {
-        req.session.destroy(err => {
-            if (err) {
-                return res.status(500).send(err);
+        try {
+            const existingMember = await Member.findOne({ membername });
+            if (existingMember) {
+                return res.status(400).json({ error: "Membername already exists" });
             }
-            res.redirect('/');
+
+            const hashedPassword = await bcrypt.hash(password, 10);
+            const newMember = new Member({
+                membername,
+                password: hashedPassword,
+                name,
+                YOB,
+            });
+
+            await newMember.save();
+            const token = createToken(res, newMember._id);
+
+            res.status(201).json({
+                _id: newMember._id,
+                membername: newMember.membername,
+                name: newMember.name,
+                YOB: newMember.YOB,
+                isAdmin: newMember.isAdmin,
+                token,
+            });
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    };
+
+    login = async (req, res) => {
+        const { membername, password } = req.body;
+        try {
+            const existingMember = await Member.findOne({ membername });
+            if (!existingMember) {
+                return res.status(400).json({ error: "Wrong membername or pasword" });
+            }
+
+            const isPasswordValid = await bcrypt.compare(
+                password,
+                existingMember.password
+            );
+            if (!isPasswordValid) {
+                return res.status(400).json({ error: "Wrong membername or pasword" });
+            }
+
+            const token = createToken(res, existingMember._id);
+
+            res.status(200).json({
+                _id: existingMember._id,
+                membername: existingMember.membername,
+                name: existingMember.name,
+                YOB: existingMember.YOB,
+                isAdmin: existingMember.isAdmin,
+                token,
+            });
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    };
+
+    logout = async (req, res) => {
+        res.cookie("jwt", "", {
+            httpOnly: true,
+            expires: new Date(0),
         });
-    }
+        res.status(200).json({ message: "Logout successfully" });
+    };
 
-    //Show user's profile
-    showProfile(req, res) {
-        if (!req.user) {
-            res.redirect('/');
-        }
-        res.render('users/profile.ejs', {
-            title: 'Profile',
-            user: req.user
-        });
-    }
+    getProfile = async (req, res) => {
+        try {
+            const member = await Member.findById(req.member._id);
+            if (!member) {
+                return res.status(404).json({ error: "Member not found" });
+            }
 
-    // Update user
-    updateProfile(req, res) {
-        const { name, YOB } = req.body;
-        Member.findById(req.user.id)
-            .then(member => {
-                if (!member) {
-                    return res.status(404).send('User not found');
-                }
-                member.name = name || member.name;
-                member.YOB = YOB || member.YOB;
-                return member.save();
-            })
-            .then(() => {
-                res.redirect('/auth/profile');
-            })
-            .catch(err => {
-                console.error(err);
-                res.status(500).send('Server error');
+            res.json({
+                _id: member._id,
+                membername: member.membername,
+                name: member.name,
+                YOB: member.YOB,
+                isAdmin: member.isAdmin,
             });
-    }
-
-    //Show change password form
-    showChangePasswordForm(req, res) {
-        if (!req.user) {
-            res.redirect('/');
+        } catch (err) {
+            res.status(500).json({ error: err.message });
         }
-        res.render('users/change-password', { title: 'Change Password' });
-    }
+    };
 
-    //Change password 
-    changePassword(req, res) {
-        const { currentPassword, newPassword, confirmNewPassword } = req.body;
+    updateProfile = async (req, res) => {
+        try {
+            const member = await Member.findById(req.member._id);
+            if (!member) {
+                return res.status(404).json({ error: "Member not found" });
+            }
 
-        // Check if the new password and confirmation match
-        if (newPassword !== confirmNewPassword) {
-            return res.render('users/change-password', {
-                title: 'Change Password',
-                error: 'New password and confirmation do not match'
+            member.name = req.body.name || member.name;
+            member.YOB = req.body.YOB || member.YOB;
+
+            const updatedMember = await member.save();
+            res.json({
+                _id: updatedMember._id,
+                membername: updatedMember.membername,
+                name: updatedMember.name,
+                YOB: updatedMember.YOB,
+                isAdmin: updatedMember.isAdmin,
             });
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    };
+
+    changePassword = async (req, res) => {
+        const { oldPassword, newPassword, confirmPassword } = req.body;
+
+        if (newPassword !== confirmPassword) {
+            return res.status(400).json({ error: "New passwords do not match" });
         }
 
-        Member.findById(req.user.id)
-            .then(member => {
-                if (!member) {
-                    return res.status(404).send('User not found');
-                }
+        try {
+            const member = await Member.findById(req.member._id);
+            if (!member) {
+                return res.status(404).json({ error: "Member not found" });
+            }
 
-                // Check if the current password is correct
-                return bcrypt.compare(currentPassword, member.password)
-                    .then(isMatch => {
-                        if (!isMatch) {
-                            return res.render('users/change-password', {
-                                title: 'Change Password',
-                                error: 'Current password is incorrect'
-                            });
-                        }
+            const isMatch = await bcrypt.compare(oldPassword, member.password);
+            if (!isMatch) {
+                return res.status(400).json({ error: "Old password is incorrect" });
+            }
 
-                        // Check if the new password is different from the current password
-                        if (currentPassword === newPassword) {
-                            return res.render('users/change-password', {
-                                title: 'Change Password',
-                                error: 'New password must be different from the current password'
-                            });
-                        }
+            if (newPassword === oldPassword) {
+                return res.status(400).json({ error: "Please choose a new password " });
+            }
 
-                        // Hash the new password
-                        return bcrypt.hash(newPassword, 10)
-                            .then(hashedNewPassword => {
-                                member.password = hashedNewPassword;
-                                return member.save();
-                            })
-                            .then(() => {
-                                res.redirect('/auth/logout');
-                            });
-                    });
-            })
-            .catch(err => {
-                console.error(err);
-                res.status(500).send('Server error');
-            });
-    }
+            const hashedPassword = await bcrypt.hash(newPassword, 10);
+            member.password = hashedPassword;
+            await member.save();
+
+            res.json({ message: "Password changed successfully" });
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    };
 }
 
 module.exports = new AuthController();
+
+const createToken = (res, memberId) => {
+    const token = jwt.sign({ memberId }, SECRET_KEY, {
+        expiresIn: "1h",
+    });
+    res.cookie("jwt", token, {
+        httpOnly: true,
+        secure: SECRET_KEY !== "development",
+        sameSite: "strict",
+        maxAge: 60 * 60 * 1000,
+    });
+    return token;
+};

@@ -1,27 +1,21 @@
-var express = require('express');
-var watchRouter = express.Router();
+const express = require('express');
+const watchRouter = express.Router();
 const watchController = require('../controllers/watchController');
-const middlewareController = require('../middleware/middlewareController');
+const { authenticate, authorizedAdmin } = require('../middleware/middlewareController');
 
 watchRouter.route('/')
-    .get(watchController.getAllWatch)
+    .get(watchController.getAllWatch);
 
-watchRouter.route('/watch')
-    .get(middlewareController.checkAdmin, watchController.getAllWatchbyAdmin)
+watchRouter.route('/watches')
+    .get(authenticate, authorizedAdmin, watchController.getAllWatchbyAdmin)
+    .post(authenticate, authorizedAdmin, watchController.insertWatch);
 
-watchRouter.route('/create-watch')
-    .get(middlewareController.checkAdmin, watchController.showCreateWatchForm)
-    .post(middlewareController.checkAdmin, watchController.insertWatch);
-
-watchRouter.route('/watch/:id')
+watchRouter.route('/watches/:id')
     .get(watchController.getWatchDetails)
-    .delete(middlewareController.checkAdmin, watchController.deleteWatch);
+    .put(authenticate, authorizedAdmin, watchController.editWatch)
+    .delete(authenticate, authorizedAdmin, watchController.deleteWatch);
 
-watchRouter.route('/watch/:id/edit')
-    .get(middlewareController.checkAdmin, watchController.showEditWatchForm)
-    .post(middlewareController.checkAdmin, watchController.editWatch);
+watchRouter.route('/watches/:id/comments')
+    .post(authenticate, watchController.addCommentToWatch);
 
-watchRouter.route('/watch/:id/comments')
-    .post(middlewareController.isAuthenticated, watchController.addComment);
-    
 module.exports = watchRouter;

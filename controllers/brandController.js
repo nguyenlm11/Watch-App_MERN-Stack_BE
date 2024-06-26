@@ -4,91 +4,69 @@ const Watch = require('../models/watch');
 class BrandController {
     // Get all Brands
     async getAllBrand(req, res) {
-        Brand.find({})
-            .then((brands) => {
-                res.render('brands/brand-list.ejs', {
-                    title: 'Watch App - Brands',
-                    brandData: brands
-                });
-            })
-            .catch(err => res.status(500).send(err));
+        try {
+            const brands = await Brand.find({});
+            res.json(brands);
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
     }
 
     // Add new Brand
-    insertBrand(req, res) {
+    async insertBrand(req, res) {
         const brandName = req.body.brandName;
 
-        Brand.findOne({ brandName: brandName })
-            .then(existingBrand => {
-                if (existingBrand) {
-                    res.render('brands/create-brand.ejs', {
-                        title: 'Add New Brand',
-                        error: 'Brand already exists'
-                    });
-                } else {
-                    const br = new Brand({ brandName: brandName });
-                    br.save()
-                        .then(() => res.redirect('/brand'))
-                        .catch(err => res.status(500).send(err));
-                }
-            })
-            .catch(err => res.status(500).send(err));
+        try {
+            const existingBrand = await Brand.findOne({ brandName });
+            if (existingBrand) {
+                return res.status(400).json({ error: 'Brand already exists' });
+            }
+            const newBrand = new Brand({ brandName });
+            await newBrand.save();
+            res.status(201).json(newBrand);
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
     }
 
     // Delete Brand
-    deleteBrand(req, res) {
+    async deleteBrand(req, res) {
         const brandId = req.params.id;
-        Brand.findByIdAndDelete(brandId)
-            .then(deleteBrand => {
-                if (!deleteBrand) {
-                    return res.status(404).send('Brand not found');
-                }
-                return Watch.deleteMany({ brand: brandId });
-            })
-            .then(() => res.redirect('/brand'))
-            .catch(err => res.status(500).send(err));
-    }
 
-    // Edit Brand Form
-    editBrandForm(req, res) {
-        const brandId = req.params.id;
-        Brand.findById(brandId)
-            .then((brand) => {
-                res.render('brands/edit-brand.ejs', {
-                    title: 'Edit Brand',
-                    brand: brand
-                });
-            })
-            .catch(err => res.status(500).send(err));
+        try {
+            const deletedBrand = await Brand.findByIdAndDelete(brandId);
+            if (!deletedBrand) {
+                return res.status(404).json({ error: 'Brand not found' });
+            }
+            await Watch.deleteMany({ brand: brandId });
+            res.status(200).json({ message: 'Brand deleted successfully' });
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
     }
 
     // Update Brand
-    updateBrand(req, res) {
+    async updateBrand(req, res) {
         const brandId = req.params.id;
-        const BrandName = req.body.brandName;
+        const { brandName } = req.body;
 
-        Brand.findById(brandId)
-            .then((brand) => {
-                if (!brand) {
-                    return res.status(404).send('Brand not found');
-                }
+        try {
+            const brand = await Brand.findById(brandId);
+            if (!brand) {
+                return res.status(404).json({ error: 'Brand not found' });
+            }
 
-                Brand.findOne({ brandName: BrandName, _id: { $ne: brandId } })
-                    .then((existingBrand) => {
-                        if (existingBrand) {
-                            return res.render('brands/edit-brand.ejs', {
-                                title: 'Edit Brand',
-                                brand: brand,
-                                error: 'Brand already exists'
-                            });
-                        }
-                        Brand.findByIdAndUpdate(brandId, req.body, { new: true })
-                            .then(() => res.redirect('/brand'))
-                            .catch((err) => res.status(500).send(err));
-                    })
-                    .catch((err) => res.status(500).send(err));
-            })
-            .catch((err) => res.status(500).send(err));
+            const existingBrand = await Brand.findOne({ brandName, _id: { $ne: brandId } });
+            if (existingBrand) {
+                return res.status(400).json({ error: 'Brand already exists' });
+            }
+
+            brand.brandName = brandName;
+            await brand.save();
+            res.status(200).json(brand);
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
     }
 }
 
