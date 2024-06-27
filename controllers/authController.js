@@ -43,7 +43,7 @@ class AuthController {
         try {
             const existingMember = await Member.findOne({ membername });
             if (!existingMember) {
-                return res.status(400).json({ error: "Wrong membername or pasword" });
+                return res.status(400).json({ error: "Membername or pasword is incorrect" });
             }
 
             const isPasswordValid = await bcrypt.compare(
@@ -51,7 +51,7 @@ class AuthController {
                 existingMember.password
             );
             if (!isPasswordValid) {
-                return res.status(400).json({ error: "Wrong membername or pasword" });
+                return res.status(400).json({ error: "Membername or pasword is incorrect" });
             }
 
             const token = createToken(res, existingMember._id);
